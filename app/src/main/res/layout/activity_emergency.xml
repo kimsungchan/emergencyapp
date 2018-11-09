@@ -6,37 +6,28 @@
     android:orientation="vertical"
     tools:context=".emergencyActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Name"
-        android:id="@+id/textView_main_name" />
-
-    <EditText
+    <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/editText_main_name" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Country"
-        android:id="@+id/textView_main_country" />
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/editText_main_country" />
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        android:id="@+id/listView_main_list" />
 
     <Button
+        android:layout_margin="2dp"
+        android:id="@+id/button_main_all"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Insert"
-        android:id="@+id/button_main_insert" />
+        android:layout_weight="2"
+        android:layout_height="0dp"
+        android:text="전체보기" />
 
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:layout_margin="5dp"
+        android:padding="5dp"
         android:id="@+id/textView_main_result" />
 
 </LinearLayout>

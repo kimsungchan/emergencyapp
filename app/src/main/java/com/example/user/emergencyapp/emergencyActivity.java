@@ -2,14 +2,21 @@ package com.example.user.emergencyapp;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 
@@ -19,6 +26,9 @@ import java.io.OutputStream;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+
+
 public class emergencyActivity extends AppCompatActivity {
     private static String IP_ADDRESS = "192.168.0.98";
     private static String TAG = "phptest";
@@ -26,32 +36,40 @@ public class emergencyActivity extends AppCompatActivity {
     private EditText mEditTextName;
     private EditText mEditTextCountry;
     private TextView mTextViewResult;
+    private ArrayList<PersonalData> mArrayList;
+    private UsersAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+    private EditText mEditTextSearchKeyword;
+    private String mJsonString;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
-        mEditTextName = (EditText)findViewById(R.id.editText_main_name);
-        mEditTextCountry = (EditText)findViewById(R.id.editText_main_country);
-        mTextViewResult = (TextView)findViewById(R.id.textView_main_result);
 
+        mTextViewResult = (TextView)findViewById(R.id.textView_main_result);
+        mRecyclerView = (RecyclerView) findViewById(R.id.listView_main_list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mTextViewResult.setMovementMethod(new ScrollingMovementMethod());
 
 
-        Button buttonInsert = (Button)findViewById(R.id.button_main_insert);
-        buttonInsert.setOnClickListener(new View.OnClickListener() {
-            @Override
+
+        mArrayList = new ArrayList<>();
+
+        mAdapter = new UsersAdapter(this, mArrayList);
+        mRecyclerView.setAdapter(mAdapter);
+
+
+        Button button_all = (Button) findViewById(R.id.button_main_all);
+        button_all.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                String name = mEditTextName.getText().toString();
-                String country = mEditTextCountry.getText().toString();
+                mArrayList.clear();
+                mAdapter.notifyDataSetChanged();
 
-                InsertData task = new InsertData();
-                task.execute("http://" + IP_ADDRESS + "/insert2.php", name,country);
-
-
-                mEditTextName.setText("");
-                mEditTextCountry.setText("");
-
+                GetData task = new GetData();
+                task.execute( "http://" + IP_ADDRESS + "/getjson.php", "");
             }
         });
 
@@ -59,8 +77,10 @@ public class emergencyActivity extends AppCompatActivity {
 
 
 
-    class InsertData extends AsyncTask<String, Void, String>{
+    private class GetData extends AsyncTask<String, Void, String>{
+
         ProgressDialog progressDialog;
+        String errorString = null;
 
         @Override
         protected void onPreExecute() {
@@ -77,18 +97,25 @@ public class emergencyActivity extends AppCompatActivity {
 
             progressDialog.dismiss();
             mTextViewResult.setText(result);
-            Log.d(TAG, "POST response  - " + result);
+            Log.d(TAG, "response - " + result);
+
+            if (result == null){
+
+                mTextViewResult.setText(errorString);
+            }
+            else {
+
+                mJsonString = result;
+                showResult();
+            }
         }
 
 
         @Override
         protected String doInBackground(String... params) {
 
-            String name = (String)params[1];
-            String country = (String)params[2];
-
-            String serverURL = (String)params[0];
-            String postParameters = "name=" + name + "&country=" + country;
+            String serverURL = params[0];
+            String postParameters = "cal=" + params[1];
 
 
             try {
@@ -100,6 +127,7 @@ public class emergencyActivity extends AppCompatActivity {
                 httpURLConnection.setReadTimeout(5000);
                 httpURLConnection.setConnectTimeout(5000);
                 httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setDoInput(true);
                 httpURLConnection.connect();
 
 
@@ -110,7 +138,7 @@ public class emergencyActivity extends AppCompatActivity {
 
 
                 int responseStatusCode = httpURLConnection.getResponseCode();
-                Log.d(TAG, "POST response code - " + responseStatusCode);
+                Log.d(TAG, "response code - " + responseStatusCode);
 
                 InputStream inputStream;
                 if(responseStatusCode == HttpURLConnection.HTTP_OK) {
@@ -125,28 +153,72 @@ public class emergencyActivity extends AppCompatActivity {
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
                 StringBuilder sb = new StringBuilder();
-                String line = null;
+                String line;
 
                 while((line = bufferedReader.readLine()) != null){
                     sb.append(line);
                 }
 
-
                 bufferedReader.close();
 
-
-                return sb.toString();
+                return sb.toString().trim();
 
 
             } catch (Exception e) {
 
-                Log.d(TAG, "InsertData: Error ", e);
+                Log.d(TAG, "GetData : Error ", e);
+                errorString = e.toString();
 
-                return new String("Error: " + e.getMessage());
+                return null;
             }
 
         }
     }
 
+
+    private void showResult(){
+
+        String TAG_JSON="emergency";
+        String TAG_bno = "bno";
+        String TAG_AgencyNAME = "angencyname";
+        String TAG_Cal ="cal";
+        String TAG_Longitude ="Longitude";
+        String TAG_Latitude ="Latitude";
+
+
+        try {
+            JSONObject jsonObject = new JSONObject(mJsonString);
+            JSONArray jsonArray = jsonObject.getJSONArray(TAG_JSON);
+
+            for(int i=0;i<jsonArray.length();i++){
+
+                JSONObject item = jsonArray.getJSONObject(i);
+
+                String bno = item.getString(TAG_bno);
+                String agencyname = item.getString(TAG_AgencyNAME);
+                String cal = item.getString(TAG_Cal);
+                String longitude = item.getString(TAG_Longitude);
+                String latitude = item.getString(TAG_Latitude);
+
+                PersonalData personalData = new PersonalData();
+
+                personalData.setMember_bno(bno);
+                personalData.setMember_agencyname(agencyname);
+                personalData.setMember_cal(cal);
+                personalData.setMember_longitude(longitude);
+                personalData.setMember_latitude(latitude);
+
+                mArrayList.add(personalData);
+                mAdapter.notifyDataSetChanged();
+            }
+
+
+
+        } catch (JSONException e) {
+
+            Log.d(TAG, "showResult : ", e);
+        }
+
+    }
 
 }
