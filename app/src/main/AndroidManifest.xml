@@ -18,7 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Main1ctivity"></activity>
+        <activity android:name=".emergencyActivity"></activity>
     </application>
 
 </manifest>
