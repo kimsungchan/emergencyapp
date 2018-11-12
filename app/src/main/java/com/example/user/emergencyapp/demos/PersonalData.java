@@ -1,4 +1,4 @@
-package com.example.user.emergencyapp;
+package com.example.user.emergencyapp.demos;
 
 
 public class PersonalData {

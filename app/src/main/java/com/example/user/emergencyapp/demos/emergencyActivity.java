@@ -1,4 +1,4 @@
-package com.example.user.emergencyapp;
+package com.example.user.emergencyapp.demos;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+
+import com.example.user.emergencyapp.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
